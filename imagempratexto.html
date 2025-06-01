@@ -3,79 +3,77 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title> Extraia Texto de Imagens</title>
+    <title>Leitor de Imagens e PDFs</title>
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
     <style>
         :root {
             --primary: #4361ee;
-            --primary-dark: #3a56d4;
-            --secondary: #3f37c9;
+            --secondary: #3a0ca3;
+            --accent: #f72585;
             --light: #f8f9fa;
             --dark: #212529;
-            --success: #4cc9f0;
-            --gray: #6c757d;
-            --light-gray: #e9ecef;
-        }
-        
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
         }
         
         body {
-            font-family: 'Poppins', sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f5f7ff;
             color: var(--dark);
             line-height: 1.6;
             padding: 20px;
-        }
-        
-        .container {
-            max-width: 800px;
+            max-width: 1000px;
             margin: 0 auto;
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            padding: 30px;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .container::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 10px;
-            background: linear-gradient(90deg, var(--primary), var(--success));
         }
         
         h1 {
-            color: var(--primary);
+            color: var(--secondary);
             text-align: center;
             margin-bottom: 10px;
-            font-weight: 600;
         }
         
         .subtitle {
             text-align: center;
-            color: var(--gray);
+            color: #6c757d;
             margin-bottom: 30px;
-            font-weight: 300;
+        }
+        
+        .upload-container {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        
+        .tab-buttons {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #eee;
+        }
+        
+        .tab-btn {
+            padding: 10px 20px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            color: #6c757d;
+            transition: all 0.3s;
+        }
+        
+        .tab-btn.active {
+            color: var(--primary);
+            border-bottom: 3px solid var(--primary);
         }
         
         .upload-area {
-            border: 2px dashed var(--light-gray);
-            border-radius: 10px;
+            border: 2px dashed #ced4da;
+            border-radius: 8px;
             padding: 40px 20px;
             text-align: center;
-            margin-bottom: 30px;
-            transition: all 0.3s ease;
-            position: relative;
-            background-color: #fafbff;
+            margin-bottom: 20px;
+            transition: all 0.3s;
+            background-color: #f8f9fa;
         }
         
         .upload-area:hover {
@@ -83,52 +81,23 @@
             background-color: rgba(67, 97, 238, 0.05);
         }
         
-        .upload-area.active {
-            border-color: var(--success);
-            background-color: rgba(76, 201, 240, 0.05);
-        }
-        
-        .upload-icon {
-            font-size: 50px;
-            color: var(--primary);
-            margin-bottom: 15px;
-        }
-        
         .btn {
             background-color: var(--primary);
             color: white;
             border: none;
-            padding: 12px 25px;
-            border-radius: 50px;
+            padding: 12px 24px;
+            border-radius: 6px;
             cursor: pointer;
             font-size: 16px;
-            font-weight: 500;
-            transition: all 0.3s ease;
+            transition: all 0.3s;
             display: inline-flex;
             align-items: center;
-            justify-content: center;
             margin: 5px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
         
         .btn:hover {
-            background-color: var(--primary-dark);
+            background-color: var(--secondary);
             transform: translateY(-2px);
-            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
-        }
-        
-        .btn:active {
-            transform: translateY(0);
-        }
-        
-        .btn-secondary {
-            background-color: white;
-            color: var(--primary);
-            border: 1px solid var(--primary);
-        }
-        
-        .btn-secondary:hover {
-            background-color: var(--light);
         }
         
         .btn i {
@@ -142,55 +111,22 @@
         .preview-container {
             margin: 25px 0;
             text-align: center;
-            display: none;
         }
         
         #imagePreview {
             max-width: 100%;
             max-height: 300px;
             border-radius: 8px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-            border: 1px solid var(--light-gray);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            display: none;
         }
         
-        .result-container {
-            margin-top: 30px;
-        }
-        
-        .result-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-        
-        .result-title {
-            color: var(--primary);
-            font-weight: 500;
-        }
-        
-        #copyBtn {
-            background-color: var(--success);
-            padding: 8px 15px;
-            font-size: 14px;
-        }
-        
-        #resultText {
+        #pdfPreview {
             width: 100%;
-            min-height: 150px;
-            padding: 15px;
-            border: 1px solid var(--light-gray);
+            height: 400px;
+            border: 1px solid #ddd;
             border-radius: 8px;
-            resize: vertical;
-            font-family: inherit;
-            font-size: 15px;
-            transition: border 0.3s;
-        }
-        
-        #resultText:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+            display: none;
         }
         
         .progress-container {
@@ -198,245 +134,368 @@
             display: none;
         }
         
-        .progress-bar {
-            height: 8px;
-            background-color: var(--light-gray);
-            border-radius: 4px;
-            overflow: hidden;
-            margin-bottom: 10px;
+        progress {
+            width: 100%;
+            height: 10px;
+            border-radius: 5px;
         }
         
-        #progressBar {
-            height: 100%;
-            width: 0%;
-            background: linear-gradient(90deg, var(--primary), var(--success));
-            transition: width 0.3s ease;
+        #resultText {
+            width: 100%;
+            min-height: 200px;
+            padding: 15px;
+            border: 1px solid #ced4da;
+            border-radius: 8px;
+            resize: vertical;
+            font-family: inherit;
+            font-size: 15px;
         }
         
-        .progress-text {
-            text-align: center;
-            color: var(--gray);
-            font-size: 14px;
-        }
-        
-        .hint {
-            text-align: center;
-            color: var(--gray);
-            font-size: 14px;
-            margin-top: 15px;
-        }
-        
-        .btn-group {
+        .page-controls {
             display: flex;
             justify-content: center;
-            flex-wrap: wrap;
-            margin-top: 20px;
+            margin: 15px 0;
         }
         
-        @media (max-width: 600px) {
-            .container {
-                padding: 20px;
-            }
-            
-            .btn {
-                padding: 10px 20px;
-                font-size: 14px;
-            }
+        .page-btn {
+            background-color: var(--light);
+            border: 1px solid #ced4da;
+            padding: 8px 15px;
+            margin: 0 5px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .error {
+            color: #dc3545;
+            text-align: center;
+            margin: 10px 0;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Extraidor</h1>
-        <p class="subtitle">Extraia texto de imagens com inteligência artificial</p>
-        
-        <div class="upload-area" id="uploadArea">
-            <div class="upload-icon">
-                <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M7 10V9C7 6.23858 9.23858 4 12 4C14.7614 4 17 6.23858 17 9V10H19C20.1046 10 21 10.8954 21 12V20C21 21.1046 20.1046 22 19 22H5C3.89543 22 3 21.1046 3 20V12C3 10.8954 3.89543 10 5 10H7ZM19 12H5V20H19V12ZM9 10H15V9C15 7.34315 13.6569 6 12 6C10.3431 6 9 7.34315 9 9V10Z" fill="currentColor"/>
-                </svg>
-            </div>
-            <h3>Arraste e solte sua imagem aqui</h3>
-            <p>ou</p>
-            <div class="btn-group">
-                <button class="btn" id="selectBtn">
-                    <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-right: 8px;">
-                        <path d="M4 16L4 17C4 18.6569 5.34315 20 7 20L17 20C18.6569 20 20 18.6569 20 17L20 16M16 12L12 16M12 16L8 12M12 16L12 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                    Selecionar Arquivo
-                </button>
-                <button class="btn btn-secondary" id="pasteBtn">
-                    <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-right: 8px;">
-                        <path d="M9 5H7C5.89543 5 5 5.89543 5 7V19C5 20.1046 5.89543 21 7 21H17C18.1046 21 19 20.1046 19 19V7C19 5.89543 18.1046 5 17 5H15M9 5C9 3.89543 9.89543 3 11 3H13C14.1046 3 15 3.89543 15 5M9 5C9 5.55228 9.44772 6 10 6H14C14.5523 6 15 5.55228 15 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                    Colar Imagem
-                </button>
-            </div>
-            <p class="hint">Formatos suportados: JPG, PNG, GIF</p>
-            <input type="file" id="fileInput" accept="image/*">
+    <h1>Leitor de Imagens e PDFs</h1>
+    <p class="subtitle">Extraia texto de imagens e documentos PDF</p>
+    
+    <div class="upload-container">
+        <div class="tab-buttons">
+            <button class="tab-btn active" id="imageTabBtn">Imagem</button>
+            <button class="tab-btn" id="pdfTabBtn">PDF</button>
         </div>
         
-        <div class="preview-container" id="previewContainer">
-            <h3>Pré-visualização</h3>
-            <img id="imagePreview" alt="Pré-visualização da imagem">
+        <div id="imageTab">
+            <div class="upload-area" id="imageUploadArea">
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-bottom: 15px;">
+                    <path d="M4 16L4 17C4 18.6569 5.34315 20 7 20L17 20C18.6569 20 20 18.6569 20 17L20 16M16 12L12 16M12 16L8 12M12 16L12 4" stroke="#4361ee" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <h3>Arraste e solte uma imagem aqui</h3>
+                <p>ou</p>
+                <button class="btn" id="selectImageBtn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M7 10V9C7 6.23858 9.23858 4 12 4C14.7614 4 17 6.23858 17 9V10H19C20.1046 10 21 10.8954 21 12V20C21 21.1046 20.1046 22 19 22H5C3.89543 22 3 21.1046 3 20V12C3 10.8954 3.89543 10 5 10H7ZM19 12H5V20H19V12ZM9 10H15V9C15 7.34315 13.6569 6 12 6C10.3431 6 9 7.34315 9 9V10Z" fill="white"/>
+                    </svg>
+                    Selecionar Imagem
+                </button>
+                <p class="hint">Formatos suportados: JPG, PNG, BMP, GIF</p>
+                <input type="file" id="imageInput" accept="image/*">
+            </div>
+            
+            <div class="preview-container">
+                <img id="imagePreview" alt="Pré-visualização da imagem">
+            </div>
+        </div>
+        
+        <div id="pdfTab" style="display: none;">
+            <div class="upload-area" id="pdfUploadArea">
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-bottom: 15px;">
+                    <path d="M14 2H6C4.89543 2 4 2.89543 4 4V20C4 21.1046 4.89543 22 6 22H18C19.1046 22 20 21.1046 20 20V8L14 2Z" stroke="#4361ee" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M14 2V8H20" stroke="#4361ee" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <h3>Arraste e solte um PDF aqui</h3>
+                <p>ou</p>
+                <button class="btn" id="selectPdfBtn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M14 2H6C4.89543 2 4 2.89543 4 4V20C4 21.1046 4.89543 22 6 22H18C19.1046 22 20 21.1046 20 20V8L14 2Z" fill="white"/>
+                        <path d="M14 2V8H20" fill="white"/>
+                    </svg>
+                    Selecionar PDF
+                </button>
+                <p class="hint">Formatos suportados: PDF</p>
+                <input type="file" id="pdfInput" accept=".pdf">
+            </div>
+            
+            <div class="preview-container">
+                <canvas id="pdfPreview"></canvas>
+                <div class="page-controls" id="pageControls" style="display: none;">
+                    <button class="page-btn" id="prevPageBtn">Anterior</button>
+                    <span id="pageInfo">Página 1 de 1</span>
+                    <button class="page-btn" id="nextPageBtn">Próxima</button>
+                </div>
+            </div>
         </div>
         
         <div class="progress-container" id="progressContainer">
-            <div class="progress-bar">
-                <div id="progressBar"></div>
-            </div>
-            <p class="progress-text" id="progressText">Preparando para processar...</p>
+            <p id="progressText">Processando...</p>
+            <progress id="progressBar" value="0" max="100"></progress>
         </div>
         
-        <div class="btn-group">
+        <div style="text-align: center; margin-top: 20px;">
             <button class="btn" id="processBtn" disabled>
-                <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-right: 8px;">
-                    <path d="M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="2"/>
-                    <path d="M12 6V12L16 14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="white" stroke-width="2"/>
+                    <path d="M12 6V12L16 14" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
                 Extrair Texto
             </button>
-            <button class="btn btn-secondary" id="clearBtn">
-                <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-right: 8px;">
-                    <path d="M19 7L18.1327 19.1425C18.0579 20.1891 17.187 21 16.1378 21H7.86224C6.81296 21 5.94208 20.1891 5.86732 19.1425L5 7M10 11V17M14 11V17M15 7V4C15 3.44772 14.5523 3 14 3H10C9.44772 3 9 3.44772 9 4V7M4 7H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <button class="btn" id="copyBtn" style="background-color: var(--accent);" disabled>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M8 5.00005C7.01165 5.00082 6.49359 5.01338 6.09202 5.21799C5.71569 5.40973 5.40973 5.71569 5.21799 6.09202C5 6.51984 5 7.07989 5 8.2V17.8C5 18.9201 5 19.4802 5.21799 19.908C5.40973 20.2843 5.71569 20.5903 6.09202 20.782C6.51984 21 7.07989 21 8.2 21H15.8C16.9201 21 17.4802 21 17.908 20.782C18.2843 20.5903 18.5903 20.2843 18.782 19.908C19 19.4802 19 18.9201 19 17.8V8.2C19 7.07989 19 6.51984 18.782 6.09202C18.5903 5.71569 18.2843 5.40973 17.908 5.21799C17.4802 5 16.9201 5 15.8 5H8ZM8 3H15.8C17.33 3 18.2 3 18.91 3.32698C19.36 3.53406 19.7534 3.84749 20.046 4.23821C20.3846 4.6908 20.5 5.33164 20.5 7V17C20.5 18.125 20.5 19.5 19 19.5C17.5 19.5 17.5 18.125 17.5 17V8.00001C17.5 6.5858 17.5 5.8787 17.0607 5.43935C16.6213 5.00001 15.9142 5.00001 14.5 5.00001H8C6.58579 5.00001 5.87868 5.00001 5.43934 5.43935C5 5.8787 5 6.5858 5 8.00001V17C5 18.125 5 19.5 3.5 19.5C2 19.5 2 18.125 2 17V7.00001C2 5.33164 2.1154 4.6908 2.45399 4.23821C2.74656 3.84749 3.13997 3.53406 3.59001 3.32698C4.29999 3 5.17003 3 6.7 3H8Z" fill="white"/>
                 </svg>
-                Limpar Tudo
+                Copiar Texto
             </button>
         </div>
-        
-        <div class="result-container">
-            <div class="result-header">
-                <h3 class="result-title">Texto Extraído</h3>
-                <button class="btn" id="copyBtn">
-                    <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-right: 8px;">
-                        <path d="M8 5.00005C7.01165 5.00082 6.49359 5.01338 6.09202 5.21799C5.71569 5.40973 5.40973 5.71569 5.21799 6.09202C5 6.51984 5 7.07989 5 8.2V17.8C5 18.9201 5 19.4802 5.21799 19.908C5.40973 20.2843 5.71569 20.5903 6.09202 20.782C6.51984 21 7.07989 21 8.2 21H15.8C16.9201 21 17.4802 21 17.908 20.782C18.2843 20.5903 18.5903 20.2843 18.782 19.908C19 19.4802 19 18.9201 19 17.8V8.2C19 7.07989 19 6.51984 18.782 6.09202C18.5903 5.71569 18.2843 5.40973 17.908 5.21799C17.4802 5 16.9201 5 15.8 5H8ZM8 3H15.8C17.33 3 18.2 3 18.91 3.32698C19.36 3.53406 19.7534 3.84749 20.046 4.23821C20.3846 4.6908 20.5 5.33164 20.5 7V17C20.5 18.125 20.5 19.5 19 19.5C17.5 19.5 17.5 18.125 17.5 17V8.00001C17.5 6.5858 17.5 5.8787 17.0607 5.43935C16.6213 5.00001 15.9142 5.00001 14.5 5.00001H8C6.58579 5.00001 5.87868 5.00001 5.43934 5.43935C5 5.8787 5 6.5858 5 8.00001V17C5 18.125 5 19.5 3.5 19.5C2 19.5 2 18.125 2 17V7.00001C2 5.33164 2.1154 4.6908 2.45399 4.23821C2.74656 3.84749 3.13997 3.53406 3.59001 3.32698C4.29999 3 5.17003 3 6.7 3H8Z" fill="currentColor"/>
-                    </svg>
-                    Copiar
-                </button>
-            </div>
-            <textarea id="resultText" placeholder="O texto extraído aparecerá aqui..."></textarea>
-        </div>
+    </div>
+    
+    <div style="margin-top: 30px;">
+        <h3>Texto Extraído:</h3>
+        <textarea id="resultText" placeholder="O texto extraído aparecerá aqui..."></textarea>
     </div>
 
     <script>
+        // Configuração do PDF.js
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.worker.min.js';
+        
         // Elementos DOM
-        const fileInput = document.getElementById('fileInput');
-        const selectBtn = document.getElementById('selectBtn');
-        const pasteBtn = document.getElementById('pasteBtn');
-        const processBtn = document.getElementById('processBtn');
-        const clearBtn = document.getElementById('clearBtn');
-        const copyBtn = document.getElementById('copyBtn');
-        const uploadArea = document.getElementById('uploadArea');
-        const previewContainer = document.getElementById('previewContainer');
+        const imageTabBtn = document.getElementById('imageTabBtn');
+        const pdfTabBtn = document.getElementById('pdfTabBtn');
+        const imageTab = document.getElementById('imageTab');
+        const pdfTab = document.getElementById('pdfTab');
+        const selectImageBtn = document.getElementById('selectImageBtn');
+        const selectPdfBtn = document.getElementById('selectPdfBtn');
+        const imageInput = document.getElementById('imageInput');
+        const pdfInput = document.getElementById('pdfInput');
+        const imageUploadArea = document.getElementById('imageUploadArea');
+        const pdfUploadArea = document.getElementById('pdfUploadArea');
         const imagePreview = document.getElementById('imagePreview');
+        const pdfPreview = document.getElementById('pdfPreview');
+        const processBtn = document.getElementById('processBtn');
+        const copyBtn = document.getElementById('copyBtn');
         const resultText = document.getElementById('resultText');
         const progressContainer = document.getElementById('progressContainer');
-        const progressBar = document.getElementById('progressBar');
         const progressText = document.getElementById('progressText');
+        const progressBar = document.getElementById('progressBar');
+        const pageControls = document.getElementById('pageControls');
+        const prevPageBtn = document.getElementById('prevPageBtn');
+        const nextPageBtn = document.getElementById('nextPageBtn');
+        const pageInfo = document.getElementById('pageInfo');
         
         // Variáveis de estado
-        let currentImage = null;
+        let currentFile = null;
+        let currentFileType = null;
+        let pdfDoc = null;
+        let pageNum = 1;
+        let pageRendering = false;
+        let pageNumPending = null;
+        let scale = 1.5;
         
         // Event Listeners
-        selectBtn.addEventListener('click', () => fileInput.click());
-        fileInput.addEventListener('change', handleFileSelect);
-        pasteBtn.addEventListener('click', handlePasteClick);
-        processBtn.addEventListener('click', processImage);
-        clearBtn.addEventListener('click', resetApp);
+        imageTabBtn.addEventListener('click', () => switchTab('image'));
+        pdfTabBtn.addEventListener('click', () => switchTab('pdf'));
+        selectImageBtn.addEventListener('click', () => imageInput.click());
+        selectPdfBtn.addEventListener('click', () => pdfInput.click());
+        imageInput.addEventListener('change', handleImageSelect);
+        pdfInput.addEventListener('change', handlePdfSelect);
+        processBtn.addEventListener('click', processFile);
         copyBtn.addEventListener('click', copyToClipboard);
+        prevPageBtn.addEventListener('click', prevPage);
+        nextPageBtn.addEventListener('click', nextPage);
         
-        // Drag and Drop
-        uploadArea.addEventListener('dragover', (e) => {
+        // Drag and Drop para imagens
+        imageUploadArea.addEventListener('dragover', (e) => {
             e.preventDefault();
-            uploadArea.classList.add('active');
+            imageUploadArea.style.borderColor = '#4361ee';
+            imageUploadArea.style.backgroundColor = 'rgba(67, 97, 238, 0.05)';
         });
         
-        uploadArea.addEventListener('dragleave', () => {
-            uploadArea.classList.remove('active');
+        imageUploadArea.addEventListener('dragleave', () => {
+            imageUploadArea.style.borderColor = '#ced4da';
+            imageUploadArea.style.backgroundColor = '#f8f9fa';
         });
         
-        uploadArea.addEventListener('drop', (e) => {
+        imageUploadArea.addEventListener('drop', (e) => {
             e.preventDefault();
-            uploadArea.classList.remove('active');
+            imageUploadArea.style.borderColor = '#ced4da';
+            imageUploadArea.style.backgroundColor = '#f8f9fa';
             
             if (e.dataTransfer.files.length) {
-                fileInput.files = e.dataTransfer.files;
-                handleFileSelect({ target: fileInput });
+                imageInput.files = e.dataTransfer.files;
+                handleImageSelect({ target: imageInput });
             }
         });
         
-        // Paste from clipboard (Ctrl+V)
-        document.addEventListener('paste', (e) => {
-            const items = e.clipboardData.items;
+        // Drag and Drop para PDFs
+        pdfUploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            pdfUploadArea.style.borderColor = '#4361ee';
+            pdfUploadArea.style.backgroundColor = 'rgba(67, 97, 238, 0.05)';
+        });
+        
+        pdfUploadArea.addEventListener('dragleave', () => {
+            pdfUploadArea.style.borderColor = '#ced4da';
+            pdfUploadArea.style.backgroundColor = '#f8f9fa';
+        });
+        
+        pdfUploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            pdfUploadArea.style.borderColor = '#ced4da';
+            pdfUploadArea.style.backgroundColor = '#f8f9fa';
             
-            for (let i = 0; i < items.length; i++) {
-                if (items[i].type.indexOf('image') !== -1) {
-                    const blob = items[i].getAsFile();
-                    displayImage(URL.createObjectURL(blob));
-                    break;
-                }
+            if (e.dataTransfer.files.length) {
+                pdfInput.files = e.dataTransfer.files;
+                handlePdfSelect({ target: pdfInput });
             }
         });
         
         // Funções
-        function handleFileSelect(e) {
+        function switchTab(tab) {
+            if (tab === 'image') {
+                imageTabBtn.classList.add('active');
+                pdfTabBtn.classList.remove('active');
+                imageTab.style.display = 'block';
+                pdfTab.style.display = 'none';
+            } else {
+                imageTabBtn.classList.remove('active');
+                pdfTabBtn.classList.add('active');
+                imageTab.style.display = 'none';
+                pdfTab.style.display = 'block';
+            }
+            resetState();
+        }
+        
+        function handleImageSelect(e) {
             const file = e.target.files[0];
             if (file && file.type.match('image.*')) {
-                displayImage(URL.createObjectURL(file));
+                currentFile = file;
+                currentFileType = 'image';
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    imagePreview.src = event.target.result;
+                    imagePreview.style.display = 'block';
+                    processBtn.disabled = false;
+                };
+                reader.readAsDataURL(file);
             }
         }
         
-        function handlePasteClick() {
-            navigator.clipboard.read().then(clipboardItems => {
-                for (const clipboardItem of clipboardItems) {
-                    for (const type of clipboardItem.types) {
-                        if (type.startsWith('image/')) {
-                            clipboardItem.getType(type).then(blob => {
-                                displayImage(URL.createObjectURL(blob));
-                            });
-                            return;
-                        }
-                    }
-                }
-                showMessage('Nenhuma imagem encontrada na área de transferência!');
-            }).catch(err => {
-                console.error('Erro ao acessar área de transferência:', err);
-                showMessage('Não foi possível acessar a área de transferência. Tente usar Ctrl+V.');
+        function handlePdfSelect(e) {
+            const file = e.target.files[0];
+            if (file && file.type === 'application/pdf') {
+                currentFile = file;
+                currentFileType = 'pdf';
+                processBtn.disabled = false;
+                
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const typedArray = new Uint8Array(event.target.result);
+                    loadPdf(typedArray);
+                };
+                reader.readAsArrayBuffer(file);
+            }
+        }
+        
+        function loadPdf(data) {
+            pdfjsLib.getDocument(data).promise.then(function(pdf) {
+                pdfDoc = pdf;
+                pageInfo.textContent = `Página 1 de ${pdf.numPages}`;
+                pageControls.style.display = 'flex';
+                renderPage(1);
+            }).catch(function(error) {
+                console.error('Erro ao carregar PDF:', error);
+                showError('Erro ao carregar PDF. O arquivo pode estar corrompido.');
             });
         }
         
-        function displayImage(imageSrc) {
-            currentImage = imageSrc;
-            imagePreview.src = imageSrc;
-            previewContainer.style.display = 'block';
-            processBtn.disabled = false;
+        function renderPage(num) {
+            pageRendering = true;
+            progressContainer.style.display = 'block';
+            progressText.textContent = `Carregando página ${num}...`;
+            progressBar.value = 0;
             
-            // Scroll to preview
-            previewContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            pdfDoc.getPage(num).then(function(page) {
+                const viewport = page.getViewport({ scale: scale });
+                pdfPreview.height = viewport.height;
+                pdfPreview.width = viewport.width;
+                
+                const renderContext = {
+                    canvasContext: pdfPreview.getContext('2d'),
+                    viewport: viewport
+                };
+                
+                const renderTask = page.render(renderContext);
+                
+                renderTask.promise.then(function() {
+                    pageRendering = false;
+                    progressContainer.style.display = 'none';
+                    if (pageNumPending !== null) {
+                        renderPage(pageNumPending);
+                        pageNumPending = null;
+                    }
+                });
+                
+                renderTask.onProgress = function(progress) {
+                    progressBar.value = progress * 100;
+                };
+            });
+            
+            pageInfo.textContent = `Página ${num} de ${pdfDoc.numPages}`;
+            pageNum = num;
+        }
+        
+        function queueRenderPage(num) {
+            if (pageRendering) {
+                pageNumPending = num;
+            } else {
+                renderPage(num);
+            }
+        }
+        
+        function prevPage() {
+            if (pageNum <= 1) return;
+            queueRenderPage(pageNum - 1);
+        }
+        
+        function nextPage() {
+            if (pageNum >= pdfDoc.numPages) return;
+            queueRenderPage(pageNum + 1);
+        }
+        
+        function processFile() {
+            if (!currentFile) return;
+            
+            resultText.value = '';
+            progressContainer.style.display = 'block';
+            progressBar.value = 0;
+            processBtn.disabled = true;
+            copyBtn.disabled = true;
+            
+            if (currentFileType === 'image') {
+                processImage();
+            } else if (currentFileType === 'pdf') {
+                processPdf();
+            }
         }
         
         function processImage() {
-            if (!currentImage) {
-                showMessage('Por favor, selecione ou cole uma imagem primeiro!');
-                return;
-            }
+            progressText.textContent = 'Processando imagem...';
             
-            // Reset UI
-            resultText.value = '';
-            progressContainer.style.display = 'block';
-            progressBar.style.width = '0%';
-            progressText.textContent = 'Iniciando processamento...';
-            processBtn.disabled = true;
-            
-            // Process with Tesseract
             Tesseract.recognize(
-                currentImage,
+                currentFile,
                 'por+eng', // Português e Inglês
                 {
                     logger: m => {
                         if (m.status === 'recognizing text') {
                             const progress = Math.round(m.progress * 100);
-                            progressBar.style.width = `${progress}%`;
+                            progressBar.value = progress;
                             progressText.textContent = `Processando: ${progress}%`;
                         } else {
                             progressText.textContent = m.status;
@@ -446,10 +505,8 @@
             ).then(({ data: { text } }) => {
                 resultText.value = text.trim();
                 progressText.textContent = 'Processamento concluído!';
-                progressBar.style.width = '100%';
-                
-                // Scroll to results
-                resultText.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                progressBar.value = 100;
+                copyBtn.disabled = false;
             }).catch(err => {
                 console.error(err);
                 resultText.value = 'Erro ao processar imagem. Por favor, tente novamente.';
@@ -459,48 +516,84 @@
             });
         }
         
-        function resetApp() {
-            fileInput.value = '';
-            currentImage = null;
-            imagePreview.src = '';
-            previewContainer.style.display = 'none';
-            resultText.value = '';
-            progressContainer.style.display = 'none';
-            progressBar.style.width = '0%';
-            processBtn.disabled = true;
-            uploadArea.classList.remove('active');
+        function processPdf() {
+            progressText.textContent = 'Extraindo texto do PDF...';
+            let fullText = '';
+            let pagesProcessed = 0;
+            
+            const processPage = (pageNum) => {
+                return pdfDoc.getPage(pageNum).then(page => {
+                    return page.getTextContent().then(textContent => {
+                        const pageText = textContent.items.map(item => item.str).join(' ');
+                        fullText += `\n\n--- Página ${pageNum} ---\n${pageText}\n`;
+                        pagesProcessed++;
+                        progressBar.value = (pagesProcessed / pdfDoc.numPages) * 100;
+                        progressText.textContent = `Processando página ${pageNum} de ${pdfDoc.numPages}...`;
+                        
+                        if (pageNum < pdfDoc.numPages) {
+                            return processPage(pageNum + 1);
+                        } else {
+                            return fullText;
+                        }
+                    });
+                });
+            };
+            
+            processPage(1).then(text => {
+                resultText.value = text.trim();
+                progressText.textContent = 'Extração concluída!';
+                progressBar.value = 100;
+                copyBtn.disabled = false;
+            }).catch(err => {
+                console.error(err);
+                resultText.value = 'Erro ao extrair texto do PDF. O PDF pode ser digitalizado (imagem) em vez de texto.';
+                progressText.textContent = 'Erro na extração';
+            }).finally(() => {
+                processBtn.disabled = false;
+            });
         }
         
         function copyToClipboard() {
-            if (!resultText.value) {
-                showMessage('Nenhum texto para copiar!');
-                return;
-            }
+            if (!resultText.value) return;
             
             navigator.clipboard.writeText(resultText.value)
                 .then(() => {
-                    copyBtn.innerHTML = '<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-right: 8px;"><path d="M18.71 9.71C18.898 9.5217 19.0037 9.2663 19.0037 9C19.0037 8.7337 18.898 8.4783 18.71 8.29C18.5217 8.102 18.2663 7.9963 18 7.9963C17.7337 7.9963 17.4783 8.102 17.29 8.29L10 15.59L6.71 12.29C6.5217 12.102 6.2663 11.9963 6 11.9963C5.7337 11.9963 5.4783 12.102 5.29 12.29C5.102 12.4783 4.9963 12.7337 4.9963 13C4.9963 13.2663 5.102 13.5217 5.29 13.71L9.29 17.71C9.4783 17.898 9.7337 18.0037 10 18.0037C10.2663 18.0037 10.5217 17.898 10.71 17.71L18.71 9.71Z" fill="currentColor"/></svg>Copiado!';
+                    copyBtn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M18.71 9.71C18.898 9.5217 19.0037 9.2663 19.0037 9C19.0037 8.7337 18.898 8.4783 18.71 8.29C18.5217 8.102 18.2663 7.9963 18 7.9963C17.7337 7.9963 17.4783 8.102 17.29 8.29L10 15.59L6.71 12.29C6.5217 12.102 6.2663 11.9963 6 11.9963C5.7337 11.9963 5.4783 12.102 5.29 12.29C5.102 12.4783 4.9963 12.7337 4.9963 13C4.9963 13.2663 5.102 13.5217 5.29 13.71L9.29 17.71C9.4783 17.898 9.7337 18.0037 10 18.0037C10.2663 18.0037 10.5217 17.898 10.71 17.71L18.71 9.71Z" fill="white"/></svg>Copiado!';
                     setTimeout(() => {
-                        copyBtn.innerHTML = '<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-right: 8px;"><path d="M8 5.00005C7.01165 5.00082 6.49359 5.01338 6.09202 5.21799C5.71569 5.40973 5.40973 5.71569 5.21799 6.09202C5 6.51984 5 7.07989 5 8.2V17.8C5 18.9201 5 19.4802 5.21799 19.908C5.40973 20.2843 5.71569 20.5903 6.09202 20.782C6.51984 21 7.07989 21 8.2 21H15.8C16.9201 21 17.4802 21 17.908 20.782C18.2843 20.5903 18.5903 20.2843 18.782 19.908C19 19.4802 19 18.9201 19 17.8V8.2C19 7.07989 19 6.51984 18.782 6.09202C18.5903 5.71569 18.2843 5.40973 17.908 5.21799C17.4802 5 16.9201 5 15.8 5H8ZM8 3H15.8C17.33 3 18.2 3 18.91 3.32698C19.36 3.53406 19.7534 3.84749 20.046 4.23821C20.3846 4.6908 20.5 5.33164 20.5 7V17C20.5 18.125 20.5 19.5 19 19.5C17.5 19.5 17.5 18.125 17.5 17V8.00001C17.5 6.5858 17.5 5.8787 17.0607 5.43935C16.6213 5.00001 15.9142 5.00001 14.5 5.00001H8C6.58579 5.00001 5.87868 5.00001 5.43934 5.43935C5 5.8787 5 6.5858 5 8.00001V17C5 18.125 5 19.5 3.5 19.5C2 19.5 2 18.125 2 17V7.00001C2 5.33164 2.1154 4.6908 2.45399 4.23821C2.74656 3.84749 3.13997 3.53406 3.59001 3.32698C4.29999 3 5.17003 3 6.7 3H8Z" fill="currentColor"/></svg>Copiar';
+                        copyBtn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 5.00005C7.01165 5.00082 6.49359 5.01338 6.09202 5.21799C5.71569 5.40973 5.40973 5.71569 5.21799 6.09202C5 6.51984 5 7.07989 5 8.2V17.8C5 18.9201 5 19.4802 5.21799 19.908C5.40973 20.2843 5.71569 20.5903 6.09202 20.782C6.51984 21 7.07989 21 8.2 21H15.8C16.9201 21 17.4802 21 17.908 20.782C18.2843 20.5903 18.5903 20.2843 18.782 19.908C19 19.4802 19 18.9201 19 17.8V8.2C19 7.07989 19 6.51984 18.782 6.09202C18.5903 5.71569 18.2843 5.40973 17.908 5.21799C17.4802 5 16.9201 5 15.8 5H8ZM8 3H15.8C17.33 3 18.2 3 18.91 3.32698C19.36 3.53406 19.7534 3.84749 20.046 4.23821C20.3846 4.6908 20.5 5.33164 20.5 7V17C20.5 18.125 20.5 19.5 19 19.5C17.5 19.5 17.5 18.125 17.5 17V8.00001C17.5 6.5858 17.5 5.8787 17.0607 5.43935C16.6213 5.00001 15.9142 5.00001 14.5 5.00001H8C6.58579 5.00001 5.87868 5.00001 5.43934 5.43935C5 5.8787 5 6.5858 5 8.00001V17C5 18.125 5 19.5 3.5 19.5C2 19.5 2 18.125 2 17V7.00001C2 5.33164 2.1154 4.6908 2.45399 4.23821C2.74656 3.84749 3.13997 3.53406 3.59001 3.32698C4.29999 3 5.17003 3 6.7 3H8Z" fill="white"/></svg>Copiar Texto';
                     }, 2000);
                 })
                 .catch(err => {
                     console.error('Falha ao copiar texto: ', err);
-                    showMessage('Falha ao copiar texto!');
+                    alert('Falha ao copiar texto!');
                 });
         }
         
-        function showMessage(msg) {
-            const oldText = progressText.textContent;
-            progressText.textContent = msg;
+        function showError(message) {
+            progressText.textContent = message;
             progressContainer.style.display = 'block';
+            progressBar.style.display = 'none';
+        }
+        
+        function resetState() {
+            currentFile = null;
+            currentFileType = null;
+            pdfDoc = null;
+            pageNum = 1;
+            pageRendering = false;
+            pageNumPending = null;
             
-            setTimeout(() => {
-                progressText.textContent = oldText;
-                if (oldText === 'Preparando para processar...') {
-                    progressContainer.style.display = 'none';
-                }
-            }, 3000);
+            imagePreview.src = '';
+            imagePreview.style.display = 'none';
+            pdfPreview.style.display = 'none';
+            pageControls.style.display = 'none';
+            resultText.value = '';
+            progressContainer.style.display = 'none';
+            processBtn.disabled = true;
+            copyBtn.disabled = true;
+            
+            imageInput.value = '';
+            pdfInput.value = '';
         }
     </script>
 </body>
