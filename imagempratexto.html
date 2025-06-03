@@ -171,6 +171,20 @@
             text-align: center;
             margin: 10px 0;
         }
+        
+        /* Adicionado estilo para área de colagem */
+        .paste-area {
+            margin-top: 15px;
+            padding: 15px;
+            background-color: #f0f2f5;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+        }
+        
+        .paste-area:hover {
+            background-color: #e2e6ea;
+        }
     </style>
 </head>
 <body>
@@ -198,6 +212,14 @@
                 </button>
                 <p class="hint">Formatos suportados: JPG, PNG, BMP, GIF</p>
                 <input type="file" id="imageInput" accept="image/*">
+                
+                <!-- Área de colagem adicionada -->
+                <div class="paste-area" id="pasteArea">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-bottom: 8px;">
+                        <path d="M10 4H7C5.89543 4 5 4.89543 5 6V18C5 19.1046 5.89543 20 7 20H17C18.1046 20 19 19.1046 19 18V6C19 4.89543 18.1046 4 17 4H14M10 4C10 5.10457 10.8954 6 12 6H14C15.1046 6 16 5.10457 16 4M10 4C10 2.89543 10.8954 2 12 2H14C15.1046 2 16 2.89543 16 4" stroke="#4361ee" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <p>Clique aqui para colar uma imagem da área de transferência</p>
+                </div>
             </div>
             
             <div class="preview-container">
@@ -215,7 +237,7 @@
                 <p>ou</p>
                 <button class="btn" id="selectPdfBtn">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M14 2H6C4.89543 2 4 2.89543 4 4V20C4 21.1046 4.89543 22 6 22H18C19.1046 22 20 21.1046 20 20V8L14 2Z" fill="white"/>
+                        <path d="M14 2H6C4.89543 2 4 2.89543 4 4V20C4 21.1046 4.89543 20 6 20H18C19.1046 20 20 19.1046 20 20V8L14 2Z" fill="white"/>
                         <path d="M14 2V8H20" fill="white"/>
                     </svg>
                     Selecionar PDF
@@ -288,6 +310,7 @@
         const prevPageBtn = document.getElementById('prevPageBtn');
         const nextPageBtn = document.getElementById('nextPageBtn');
         const pageInfo = document.getElementById('pageInfo');
+        const pasteArea = document.getElementById('pasteArea');
         
         // Variáveis de estado
         let currentFile = null;
@@ -309,6 +332,8 @@
         copyBtn.addEventListener('click', copyToClipboard);
         prevPageBtn.addEventListener('click', prevPage);
         nextPageBtn.addEventListener('click', nextPage);
+        pasteArea.addEventListener('click', handlePasteClick);
+        document.addEventListener('paste', handlePasteEvent);
         
         // Drag and Drop para imagens
         imageUploadArea.addEventListener('dragover', (e) => {
@@ -594,6 +619,41 @@
             
             imageInput.value = '';
             pdfInput.value = '';
+        }
+        
+        // Funções para lidar com colagem de imagens
+        function handlePasteClick() {
+            // Mostra mensagem para o usuário
+            alert('Por favor, pressione Ctrl+V (Cmd+V no Mac) para colar uma imagem da área de transferência.');
+        }
+        
+        function handlePasteEvent(e) {
+            // Verifica se há itens de imagem na área de transferência
+            const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+            
+            for (let i = 0; i < items.length; i++) {
+                if (items[i].type.indexOf('image') !== -1) {
+                    const blob = items[i].getAsFile();
+                    
+                    // Cria um objeto File a partir do Blob
+                    const file = new File([blob], 'imagem-colada.png', { type: blob.type });
+                    
+                    // Atualiza o estado como se tivesse selecionado um arquivo
+                    currentFile = file;
+                    currentFileType = 'image';
+                    
+                    // Mostra a pré-visualização
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        imagePreview.src = event.target.result;
+                        imagePreview.style.display = 'block';
+                        processBtn.disabled = false;
+                    };
+                    reader.readAsDataURL(file);
+                    
+                    break;
+                }
+            }
         }
     </script>
 </body>
